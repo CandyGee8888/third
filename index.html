@@ -344,6 +344,7 @@
         // ---------- 常數與 DOM ----------
         const STORAGE_KEY = 'records';
         const MAX_ACTIVE_PER_SLOT = 20;
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8opVPasZYFZ5F8sEeVke_XKevGv9TDKYjk-IVexhpBnevIj9vfPOTNHCKxEtq6U84/exec";
 
         const dateInput = document.getElementById('dateInput');
         const timeSelect = document.getElementById('timeSelect');
@@ -354,8 +355,8 @@
         const filterButtons = document.querySelectorAll('.filter-btn');
 
         // 當前篩選狀態
-        let currentStatusFilter = 'all';    // 'all', 'active', 'done'
-        let currentCategoryFilter = 'all';  // 'all', '學校', '功課', '生活', '其他'
+        let currentStatusFilter = 'all';
+        let currentCategoryFilter = 'all';
 
         // ---------- 工具函數 ----------
         function generateId() {
@@ -374,11 +375,9 @@
             });
         }
 
-        // 顯示訊息
         function showMessage(text, type = 'info') {
             messageBox.textContent = text;
             messageBox.className = 'message-box ' + type;
-            // 自動隱藏成功訊息
             if (type === 'success') {
                 setTimeout(() => {
                     if (messageBox.textContent === text) {
@@ -389,13 +388,12 @@
             }
         }
 
-        // 清除訊息
         function clearMessage() {
             messageBox.className = 'message-box';
             messageBox.textContent = '';
         }
 
-        // ---------- 資料存取 (localStorage) ----------
+        // ---------- 本地儲存 (localStorage) ----------
         function loadData() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -410,20 +408,76 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         }
 
-        // 儲存單筆 record（新增時使用）
+        // ---------- 雲端同步相關 ----------
+        /**
+         * 將 Sheet 回傳的 PascalCase 物件轉為前端 camelCase
+         */
+        function normalizeRecord(sheetRecord) {
+            return {
+                id: sheetRecord.ID || sheetRecord.id || '',
+                createdAt: sheetRecord.CreatedAt || sheetRecord.createdAt || '',
+                status: sheetRecord.Status || sheetRecord.status || 'active',
+                date: sheetRecord.Date || sheetRecord.date || '',
+                time: sheetRecord.Time || sheetRecord.time || '',
+                category: sheetRecord.Category || sheetRecord.category || ''
+            };
+        }
+
+        /**
+         * 從 Google Apps Script 取得所有記錄
+         * 回傳已 normalize 的記錄陣列
+         */
+        async function fetchRecordsFromSheet() {
+            const response = await fetch(APPS_SCRIPT_URL);
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data.ok) {
+                throw new Error(data.error || 'Unknown server error');
+            }
+            // 將所有記錄轉為前端格式
+            return (data.records || []).map(normalizeRecord);
+        }
+
+        /**
+         * 將操作同步至 Google Sheet (非同步，不回傳結果)
+         * payload: { action: "create", record } 或 { action: "update", id, changes }
+         */
+        function syncToSheet(payload) {
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    console.error('同步到 Sheet 失敗:', data.error);
+                }
+            })
+            .catch(err => {
+                console.error('同步請求錯誤:', err);
+            });
+        }
+
+        // ---------- 修改後的 saveData 與 updateRecord ----------
         function saveData(record) {
             const records = loadData();
             records.push(record);
             saveAllData(records);
+            // 非同步同步到 Sheet
+            syncToSheet({ action: "create", record: record });
         }
 
-        // 更新一筆 record
         function updateRecord(id, changes) {
             const records = loadData();
             const index = records.findIndex(r => r.id === id);
             if (index === -1) return null;
             records[index] = { ...records[index], ...changes };
             saveAllData(records);
+            // 非同步同步到 Sheet
+            syncToSheet({ action: "update", id: id, changes: changes });
             return records[index];
         }
 
@@ -467,7 +521,7 @@
 
             dateInput.min = todayStr;
             dateInput.max = maxStr;
-            dateInput.value = todayStr; // 預設今天
+            dateInput.value = todayStr;
         }
 
         // 產生時段選項
@@ -532,7 +586,6 @@
             });
         }
 
-        // 簡單轉義防止 XSS
         function escapeHtml(text) {
             return String(text)
                 .replace(/&/g, '&amp;')
@@ -542,23 +595,18 @@
                 .replace(/'/g, '&#039;');
         }
 
-        // 根據當前篩選條件取得資料並渲染
         function applyFiltersAndRender() {
             const allRecords = loadData();
             let filtered = allRecords;
 
-            // 狀態篩選
             if (currentStatusFilter !== 'all') {
                 filtered = filtered.filter(r => r.status === currentStatusFilter);
             }
-            // 分類篩選
             if (currentCategoryFilter !== 'all') {
                 filtered = filtered.filter(r => r.category === currentCategoryFilter);
             }
 
-            // 按建立時間倒序（最新在前）
             filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
             renderList(filtered);
         }
 
@@ -570,7 +618,6 @@
             const time = timeSelect.value;
             const category = categorySelect.value;
 
-            // 基本驗證
             if (!date) {
                 showMessage('請選擇預約日期', 'error');
                 return;
@@ -580,19 +627,15 @@
                 return;
             }
 
-            // 檢查滿人 (僅 active 計數)
             if (isSlotFull(date, time)) {
                 showMessage(`⚠️ ${date} ${time} 此時段已滿人 (超過 ${MAX_ACTIVE_PER_SLOT} 人預約)，請選擇其他時段`, 'error');
                 return;
             }
 
-            // 建立 record
             const newRecord = createRecord({ date, time, category });
             saveData(newRecord);
 
-            // 清空表單（保留日期與時段方便連續預約？ 可只清空分類，或保留全部；這裡保留日期、時段，重置分類）
             categorySelect.value = '學校';
-            // 可選：不清空日期和時間，方便連續新增，但保留當前選擇
 
             showMessage(`✅ 預約成功！您的預約 ID 為：${newRecord.id}`, 'success');
             applyFiltersAndRender();
@@ -602,16 +645,14 @@
         function initFilterButtons() {
             filterButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const filterType = this.dataset.filter; // 'status' 或 'category'
+                    const filterType = this.dataset.filter;
                     const filterValue = this.dataset.value;
 
-                    // 更新 active 樣式
                     document.querySelectorAll(`.filter-btn[data-filter="${filterType}"]`).forEach(b => {
                         b.classList.remove('active');
                     });
                     this.classList.add('active');
 
-                    // 更新全域變數
                     if (filterType === 'status') {
                         currentStatusFilter = filterValue;
                     } else if (filterType === 'category') {
@@ -623,16 +664,24 @@
             });
         }
 
-        // ---------- 初始化 ----------
-        function init() {
+        // ---------- 初始化（改為 async，優先從 Sheet 讀取）----------
+        async function init() {
             setDateRange();
             generateTimeOptions();
             initFilterButtons();
-
-            // 綁定提交
             submitBtn.addEventListener('click', handleSubmit);
 
-            // 初始渲染 (全部)
+            // 嘗試從 Google Sheet 載入最新資料
+            try {
+                const sheetRecords = await fetchRecordsFromSheet();
+                // 成功：用 Sheet 資料覆蓋 localStorage
+                saveAllData(sheetRecords);
+                showMessage('✅ 已從雲端載入最新預約資料', 'success');
+            } catch (error) {
+                console.warn('無法從 Google Sheet 載入，使用本地離線資料', error);
+                showMessage('⚠️ 無法連線至雲端，使用本地離線資料', 'error');
+            }
+            // 不論成功或失敗，最終都用 loadData 渲染
             applyFiltersAndRender();
         }
 
