@@ -121,7 +121,7 @@
             padding: 0.4rem 1rem;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -147,6 +147,85 @@
         .filter-btn:active {
             transform: translate(1px, 1px);
             box-shadow: var(--shadow-pixel-active);
+        }
+
+        /* 圖表容器 */
+        .chart-container {
+            background: var(--card-bg);
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-pixel);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            border-radius: var(--radius);
+            transition: box-shadow var(--transition-speed) ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: var(--shadow-pixel-hover);
+        }
+
+        .chart-title {
+            font-family: var(--font-pixel);
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            color: var(--black);
+        }
+
+        .chart-bar-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .chart-label {
+            width: 80px;
+            font-family: var(--font-pixel);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-right: 0.5rem;
+        }
+
+        .chart-bar-bg {
+            flex: 1;
+            background: var(--bg);
+            border: 2px solid var(--black);
+            height: 24px;
+            position: relative;
+            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.5s ease, filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            border-right: 2px solid var(--black);
+            cursor: pointer;
+        }
+
+        .chart-bar-fill:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .chart-bar-fill.category-學校 { background: var(--primary); }
+        .chart-bar-fill.category-功課 { background: #eab308; }
+        .chart-bar-fill.category-生活 { background: #22c55e; }
+        .chart-bar-fill.category-其他 { background: #a855f7; }
+
+        .chart-value {
+            margin-left: 0.5rem;
+            font-family: var(--font-pixel);
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--black);
+            min-width: 40px;
         }
 
         /* 搜尋框 */
@@ -246,7 +325,7 @@
             padding: 0.7rem 2rem;
             font-size: 0.95rem;
             cursor: pointer;
-            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
             white-space: nowrap;
             align-self: flex-end;
             box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
@@ -283,14 +362,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-5px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message-box.error {
@@ -324,7 +397,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
             border-radius: var(--radius);
         }
 
@@ -369,7 +442,7 @@
             border: 2px solid var(--black);
             background: var(--bg);
             color: var(--black);
-            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
         }
 
         .badge:hover {
@@ -421,7 +494,7 @@
             font-family: var(--font-pixel);
             box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
             border-radius: var(--radius);
-            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
         }
 
         .toggle-btn:hover:not(:disabled) {
@@ -514,6 +587,7 @@
 <div class="container">
     <h1>自習室預約</h1>
 
+    <!-- 篩選器 -->
     <div class="filter-bar">
         <div class="filter-group">
             <span class="filter-label">狀態</span>
@@ -532,10 +606,18 @@
         </div>
     </div>
 
+    <!-- 圖表區塊 (資料視覺化) -->
+    <div class="chart-container" id="chartContainer">
+        <div class="chart-title">📊 預約分類統計</div>
+        <div id="chartBars"></div>
+    </div>
+
+    <!-- 搜尋框 -->
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="🔍 搜尋預約編號、分類、日期或時段… 例：2026-05-28">
     </div>
 
+    <!-- 預約表單 -->
     <div class="booking-form">
         <div class="form-field">
             <label for="dateInput">📅 預約日期</label>
@@ -557,7 +639,10 @@
         <button class="submit-btn" id="submitBtn">➕ 新增預約</button>
     </div>
 
+    <!-- 訊息區 -->
     <div id="messageBox" class="message-box"></div>
+
+    <!-- 預約列表 -->
     <div id="recordList" class="record-list"></div>
 </div>
 
@@ -576,11 +661,13 @@
         const recordListEl = document.getElementById('recordList');
         const filterButtons = document.querySelectorAll('.filter-btn');
         const searchInput = document.getElementById('searchInput');
+        const chartBarsEl = document.getElementById('chartBars');
 
         let currentStatusFilter = 'all';
         let currentCategoryFilter = 'all';
         let searchKeyword = '';
 
+        // ---------- 工具函數 ----------
         function generateId() {
             return 'rec_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
         }
@@ -615,6 +702,7 @@
             messageBox.textContent = '';
         }
 
+        // ---------- 本地儲存 (localStorage) ----------
         function loadData() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -629,6 +717,7 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         }
 
+        // ---------- 雲端同步相關 ----------
         function normalizeRecord(sheetRecord) {
             return {
                 id: sheetRecord.ID || sheetRecord.id || '',
@@ -661,6 +750,7 @@
             .catch(err => console.error('同步請求錯誤:', err));
         }
 
+        // ---------- 資料操作 ----------
         function saveData(record) {
             const records = loadData();
             records.push(record);
@@ -750,6 +840,37 @@
             }
         }
 
+        // ---------- 資料視覺化：純 CSS 長條圖 ----------
+        function renderChart() {
+            const records = loadData();
+            const categories = ['學校', '功課', '生活', '其他'];
+            const counts = {};
+            categories.forEach(cat => counts[cat] = 0);
+            records.forEach(r => {
+                if (categories.includes(r.category)) {
+                    counts[r.category]++;
+                }
+            });
+
+            const total = Object.values(counts).reduce((a,b)=>a+b, 0) || 1;
+            let html = '';
+            categories.forEach(cat => {
+                const count = counts[cat];
+                const percent = (count / total) * 100;
+                html += `
+                    <div class="chart-bar-wrapper">
+                        <span class="chart-label">${cat}</span>
+                        <div class="chart-bar-bg">
+                            <div class="chart-bar-fill category-${cat}" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="chart-value">${count}</span>
+                    </div>
+                `;
+            });
+            chartBarsEl.innerHTML = html;
+        }
+
+        // ---------- 渲染列表 ----------
         function renderList(recordsToShow) {
             recordListEl.innerHTML = '';
             if (!recordsToShow || recordsToShow.length === 0) {
@@ -834,8 +955,10 @@
 
             filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             renderList(filtered);
+            renderChart();
         }
 
+        // ---------- 新增預約流程 ----------
         function handleSubmit() {
             clearMessage();
             const date = dateInput.value;
@@ -856,6 +979,7 @@
             applyFiltersAndRender();
         }
 
+        // ---------- 篩選器互動 ----------
         function initFilterButtons() {
             filterButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -877,6 +1001,7 @@
             });
         }
 
+        // ---------- 初始化 ----------
         async function init() {
             setDateRange();
             generateTimeOptions();
