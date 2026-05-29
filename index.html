@@ -6,18 +6,29 @@
     <title>自習室預約系統</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-light: #e0e7ff;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
             --danger: #dc2626;
+            --danger-dark: #b91c1c;
+            --danger-light: #fee2e2;
             --success: #059669;
-            --warning: #d97706;
-            --bg: #f9fafb;
-            --card-bg: #ffffff;
-            --text: #111827;
-            --text-secondary: #6b7280;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-            --radius: 10px;
+            --success-dark: #047857;
+            --success-light: #d1fae5;
+            --btn-main: #960B05;
+            --btn-main-dark: #6b0400;
+            --btn-main-light: #b8302a;
+            --bg: #FFFEE5;
+            --card-bg: #FFF3C4;
+            --black: #1a1a1a;
+            --gray-dark: #4a4a4a;
+            --gray: #8b8b8b;
+            --shadow-pixel: 4px 4px 0 rgba(0,0,0,0.15);
+            --shadow-pixel-hover: 4px 4px 0 rgba(0,0,0,0.25);
+            --shadow-pixel-active: 2px 2px 0 rgba(0,0,0,0.2);
+            --radius: 0px;
+            --font-pixel: 'Courier New', 'Consolas', monospace;
+            --transition-speed: 0.2s;
         }
 
         * {
@@ -27,76 +38,115 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--font-pixel);
             background-color: var(--bg);
-            color: var(--text);
+            background-image: radial-gradient(circle, #f0edd0 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--black);
             padding: 2rem 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            line-height: 1.6;
         }
 
         .container {
             width: 100%;
-            max-width: 720px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         h1 {
             text-align: center;
-            font-size: 1.8rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: #1e1b4b;
+            margin-bottom: 2rem;
+            color: #960B05;
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        h1::before {
+            content: "📚";
+            font-size: 2.4rem;
+            color: #960B05;
+            text-shadow: none;
         }
 
         /* 篩選器 */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
             background: var(--card-bg);
-            padding: 1rem;
+            padding: 1.25rem 1.5rem;
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-pixel);
             border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            transition: box-shadow var(--transition-speed) ease;
+        }
+
+        .filter-bar:hover {
+            box-shadow: var(--shadow-pixel-hover);
         }
 
         .filter-group {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
         }
 
         .filter-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-right: 0.2rem;
+            font-family: var(--font-pixel);
         }
 
         .filter-btn {
-            border: 1px solid var(--border);
-            background: white;
-            padding: 0.35rem 0.9rem;
-            border-radius: 20px;
+            border: 2px solid var(--black);
+            background: var(--bg);
+            color: var(--black);
+            padding: 0.4rem 1rem;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
-            color: #374151;
-            font-weight: 500;
+            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: var(--font-pixel);
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+            border-radius: var(--radius);
+            position: relative;
         }
 
         .filter-btn.active {
-            background: var(--primary);
+            background: var(--btn-main-dark);
             color: white;
-            border-color: var(--primary);
-            box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            transform: translate(1px, 1px);
         }
 
         .filter-btn:hover:not(.active) {
-            background: #f3f4f6;
-            border-color: #c7d2fe;
+            background: var(--card-bg);
+            transform: translate(-2px, -2px) scale(1.03);
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.25);
+        }
+
+        .filter-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: var(--shadow-pixel-active);
         }
 
         /* 搜尋框 */
@@ -107,108 +157,153 @@
 
         .search-box input {
             width: 100%;
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 3px solid var(--black);
             font-size: 0.95rem;
+            background: var(--bg);
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            box-shadow: var(--shadow-pixel);
+            font-family: var(--font-pixel);
+            letter-spacing: 0.5px;
+            border-radius: var(--radius);
         }
 
         .search-box input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-light);
+            box-shadow: 4px 4px 0 rgba(37,99,235,0.3);
+        }
+
+        .search-box input::placeholder {
+            color: var(--gray);
+            font-weight: 400;
         }
 
         /* 預約表單 */
         .booking-form {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            padding: 1.75rem;
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-pixel);
             margin-bottom: 1.5rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 1.25rem;
             align-items: flex-end;
+            border-radius: var(--radius);
+            transition: box-shadow var(--transition-speed) ease;
+        }
+
+        .booking-form:hover {
+            box-shadow: var(--shadow-pixel-hover);
         }
 
         .form-field {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
-            flex: 1 1 160px;
+            gap: 0.4rem;
+            flex: 1 1 180px;
         }
 
         .form-field label {
             font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: 700;
+            color: var(--black);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-family: var(--font-pixel);
         }
 
         select, input[type="date"] {
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 0.7rem 0.9rem;
+            border: 2px solid var(--black);
             font-size: 0.95rem;
-            background: white;
-            transition: 0.2s;
+            background: var(--bg);
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background var(--transition-speed) ease;
             width: 100%;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+            font-family: var(--font-pixel);
+            border-radius: var(--radius);
+        }
+
+        select:hover, input[type="date"]:hover {
+            border-color: var(--primary);
+            background: var(--card-bg);
+            box-shadow: 4px 4px 0 rgba(37,99,235,0.2);
         }
 
         select:focus, input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-light);
+            box-shadow: 4px 4px 0 rgba(37,99,235,0.4);
         }
 
         .submit-btn {
-            background: var(--primary);
+            background: var(--btn-main);
             color: white;
-            font-weight: 600;
-            border: none;
-            padding: 0.65rem 1.8rem;
-            border-radius: 8px;
+            font-weight: 700;
+            border: 3px solid var(--black);
+            padding: 0.7rem 2rem;
             font-size: 0.95rem;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
             white-space: nowrap;
             align-self: flex-end;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: var(--font-pixel);
+            border-radius: var(--radius);
         }
 
         .submit-btn:hover {
-            background: #4338ca;
-            transform: translateY(-1px);
+            background: var(--btn-main-dark);
+            transform: translate(-2px, -2px) scale(1.03);
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.35);
         }
 
         .submit-btn:active {
-            transform: translateY(0);
+            transform: translate(1px, 1px);
+            box-shadow: var(--shadow-pixel-active);
         }
 
         /* 訊息提示 */
         .message-box {
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
+            padding: 0.9rem 1.2rem;
             margin-bottom: 1.2rem;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: 700;
             display: none;
-            background: #f3f4f6;
-            border-left: 4px solid var(--primary);
+            background: var(--card-bg);
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-pixel);
+            font-family: var(--font-pixel);
+            border-radius: var(--radius);
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message-box.error {
-            background: #fef2f2;
-            border-left-color: var(--danger);
-            color: #b91c1c;
+            background: #fee2e2;
+            border-color: var(--danger);
+            color: var(--danger-dark);
             display: block;
         }
 
         .message-box.success {
-            background: #f0fdf4;
-            border-left-color: var(--success);
-            color: #065f46;
+            background: #d1fae5;
+            border-color: var(--success);
+            color: var(--success-dark);
             display: block;
         }
 
@@ -221,107 +316,204 @@
 
         .record-card {
             background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 1rem 1.2rem;
-            box-shadow: var(--shadow);
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-pixel);
+            padding: 1.1rem 1.4rem;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 0.8rem;
-            transition: 0.2s;
+            gap: 1rem;
+            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+            border-radius: var(--radius);
+        }
+
+        .record-card:hover {
+            box-shadow: var(--shadow-pixel-hover);
+            transform: translate(-2px, -2px) scale(1.01);
         }
 
         .record-info {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.8rem 1.4rem;
+            gap: 0.8rem 1.5rem;
         }
 
         .record-field {
             font-size: 0.9rem;
+            color: var(--black);
+            font-family: var(--font-pixel);
         }
 
         .record-id {
-            font-family: monospace;
-            background: #f3f4f6;
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
+            font-family: var(--font-pixel);
+            background: var(--bg);
+            padding: 0.25rem 0.6rem;
+            border: 1px solid var(--gray-dark);
             font-size: 0.8rem;
-            color: #4b5563;
+            color: var(--black);
+            transition: background var(--transition-speed) ease;
+        }
+
+        .record-id:hover {
+            background: var(--card-bg);
         }
 
         .badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.2rem 0.7rem;
-            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 1px;
+            border: 2px solid var(--black);
+            background: var(--bg);
+            color: var(--black);
+            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
+        }
+
+        .badge:hover {
+            filter: brightness(0.95);
+            transform: scale(1.05);
         }
 
         .badge-active {
-            background: #dbeafe;
-            color: #1e40af;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-color: var(--primary);
+        }
+
+        .badge-active:hover {
+            background: #bfdbfe;
         }
 
         .badge-done {
-            background: #d1fae5;
-            color: #065f46;
+            background: var(--success-light);
+            color: var(--success-dark);
+            border-color: var(--success);
+        }
+
+        .badge-done:hover {
+            background: #a7f3d0;
         }
 
         .badge-expired {
-            background: #fee2e2;
-            color: #991b1b;
+            background: var(--danger-light);
+            color: var(--danger-dark);
+            border-color: var(--danger);
+            text-decoration: line-through;
+        }
+
+        .badge-expired:hover {
+            background: #fecaca;
         }
 
         .toggle-btn {
-            background: none;
-            border: 1px solid var(--border);
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
+            background: var(--btn-main);
+            color: white;
+            border: 2px solid var(--black);
+            padding: 0.45rem 1.2rem;
             font-size: 0.8rem;
             cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
-            white-space: nowrap;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: var(--font-pixel);
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+            border-radius: var(--radius);
+            transition: all var(--transition-speed) ease, transform var(--transition-speed) ease;
         }
 
         .toggle-btn:hover:not(:disabled) {
-            background: #f3f4f6;
-            border-color: #a5b4fc;
+            background: var(--btn-main-dark);
+            transform: translate(-2px, -2px) scale(1.05);
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+        }
+
+        .toggle-btn:active:not(:disabled) {
+            transform: translate(1px, 1px);
+            box-shadow: var(--shadow-pixel-active);
         }
 
         .toggle-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
-            border-color: #e5e7eb;
-            color: #9ca3af;
+            border-color: #aaa;
+            color: #ddd;
+            background: #5a5a5a;
+            box-shadow: none;
+            transform: none;
         }
 
         .empty-message {
             text-align: center;
-            color: var(--text-secondary);
-            padding: 2rem;
+            color: var(--gray-dark);
+            padding: 3rem 2rem;
             font-style: italic;
+            background: var(--card-bg);
+            border: 3px dashed var(--black);
+            box-shadow: var(--shadow-pixel);
+            font-family: var(--font-pixel);
+            transition: background var(--transition-speed) ease;
         }
 
-        @media (max-width: 500px) {
+        .empty-message:hover {
+            background: #fff8d0;
+        }
+
+        /* 手機適配 */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.75rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 1.25rem;
+            }
+            .filter-bar {
+                padding: 1rem;
+                gap: 0.8rem;
+                flex-direction: column;
+            }
+            .filter-group {
+                width: 100%;
+                justify-content: flex-start;
+            }
             .booking-form {
                 flex-direction: column;
+                padding: 1.2rem;
+                gap: 0.8rem;
+            }
+            .form-field {
+                width: 100%;
+                flex: auto;
             }
             .submit-btn {
                 width: 100%;
+                text-align: center;
+                padding: 0.8rem;
+                margin-top: 0.25rem;
+            }
+            .record-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+            .record-info {
+                width: 100%;
+                gap: 0.5rem 1rem;
+            }
+            .toggle-btn {
+                align-self: flex-end;
+                margin-top: 0.25rem;
             }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>📚 自習室預約</h1>
+    <h1>自習室預約</h1>
 
-    <!-- 篩選器 -->
     <div class="filter-bar">
         <div class="filter-group">
             <span class="filter-label">狀態</span>
@@ -340,12 +532,10 @@
         </div>
     </div>
 
-    <!-- 搜尋框 -->
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 搜尋預約編號、分類、日期或時段...">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋預約編號、分類、日期或時段… 例：2026-05-28">
     </div>
 
-    <!-- 預約表單 -->
     <div class="booking-form">
         <div class="form-field">
             <label for="dateInput">📅 預約日期</label>
@@ -353,9 +543,7 @@
         </div>
         <div class="form-field">
             <label for="timeSelect">⏰ 時段</label>
-            <select id="timeSelect">
-                <!-- 動態生成 9:00-10:00 到 22:00-23:00 -->
-            </select>
+            <select id="timeSelect"></select>
         </div>
         <div class="form-field">
             <label for="categorySelect">📂 分類</label>
@@ -369,21 +557,16 @@
         <button class="submit-btn" id="submitBtn">➕ 新增預約</button>
     </div>
 
-    <!-- 訊息區 -->
     <div id="messageBox" class="message-box"></div>
-
-    <!-- 預約列表 -->
-    <div id="recordList" class="record-list">
-        <!-- 動態渲染 -->
-    </div>
+    <div id="recordList" class="record-list"></div>
 </div>
 
 <script>
     (function() {
-        // ---------- 常數與 DOM ----------
         const STORAGE_KEY = 'records';
         const MAX_ACTIVE_PER_SLOT = 20;
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8opVPasZYFZ5F8sEeVke_XKevGv9TDKYjk-IVexhpBnevIj9vfPOTNHCKxEtq6U84/exec";
+        const DEMO_DATE = '2026-05-28';
 
         const dateInput = document.getElementById('dateInput');
         const timeSelect = document.getElementById('timeSelect');
@@ -394,12 +577,10 @@
         const filterButtons = document.querySelectorAll('.filter-btn');
         const searchInput = document.getElementById('searchInput');
 
-        // 當前篩選狀態
         let currentStatusFilter = 'all';
         let currentCategoryFilter = 'all';
         let searchKeyword = '';
 
-        // ---------- 工具函數 ----------
         function generateId() {
             return 'rec_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8);
         }
@@ -434,7 +615,6 @@
             messageBox.textContent = '';
         }
 
-        // ---------- 本地儲存 (localStorage) ----------
         function loadData() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -449,7 +629,6 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         }
 
-        // ---------- 雲端同步相關 ----------
         function normalizeRecord(sheetRecord) {
             return {
                 id: sheetRecord.ID || sheetRecord.id || '',
@@ -463,13 +642,9 @@
 
         async function fetchRecordsFromSheet() {
             const response = await fetch(APPS_SCRIPT_URL);
-            if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const data = await response.json();
-            if (!data.ok) {
-                throw new Error(data.error || 'Unknown server error');
-            }
+            if (!data.ok) throw new Error(data.error || 'Unknown server error');
             return (data.records || []).map(normalizeRecord);
         }
 
@@ -481,16 +656,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (!data.ok) {
-                    console.error('同步到 Sheet 失敗:', data.error);
-                }
+                if (!data.ok) console.error('同步到 Sheet 失敗:', data.error);
             })
-            .catch(err => {
-                console.error('同步請求錯誤:', err);
-            });
+            .catch(err => console.error('同步請求錯誤:', err));
         }
 
-        // ---------- 修改後的 saveData 與 updateRecord ----------
         function saveData(record) {
             const records = loadData();
             records.push(record);
@@ -508,7 +678,6 @@
             return records[index];
         }
 
-        // ---------- 建立 record 物件 ----------
         function createRecord(formData) {
             return {
                 id: generateId(),
@@ -520,7 +689,6 @@
             };
         }
 
-        // ---------- 檢查該時段是否滿人 ----------
         function isSlotFull(date, time) {
             const records = loadData();
             const activeCount = records.filter(r =>
@@ -531,26 +699,21 @@
             return activeCount >= MAX_ACTIVE_PER_SLOT;
         }
 
-        // ---------- 自動將過期 active 改為 expired ----------
         function expireOldRecords() {
             const records = loadData();
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+            const todayStr = today.toISOString().split('T')[0];
             let changed = false;
             records.forEach(record => {
                 if (record.status === 'active' && record.date < todayStr) {
                     record.status = 'expired';
                     changed = true;
-                    // 同步到 Sheet（不阻塞）
                     syncToSheet({ action: "update", id: record.id, changes: { status: 'expired' } });
                 }
             });
-            if (changed) {
-                saveAllData(records);
-            }
+            if (changed) saveAllData(records);
         }
 
-        // ---------- 設定日期範圍 ----------
         function setDateRange() {
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -567,10 +730,14 @@
 
             dateInput.min = todayStr;
             dateInput.max = maxStr;
-            dateInput.value = todayStr;
+
+            if (DEMO_DATE >= todayStr && DEMO_DATE <= maxStr) {
+                dateInput.value = DEMO_DATE;
+            } else {
+                dateInput.value = todayStr;
+            }
         }
 
-        // 產生時段選項
         function generateTimeOptions() {
             timeSelect.innerHTML = '';
             for (let hour = 9; hour <= 22; hour++) {
@@ -583,19 +750,16 @@
             }
         }
 
-        // ---------- 渲染列表 ----------
         function renderList(recordsToShow) {
             recordListEl.innerHTML = '';
-
             if (!recordsToShow || recordsToShow.length === 0) {
-                recordListEl.innerHTML = '<div class="empty-message">尚無預約記錄</div>';
+                recordListEl.innerHTML = '<div class="empty-message">尚無預約記錄，新增一筆試試看！<br>日期格式如：2026-05-28</div>';
                 return;
             }
 
             recordsToShow.forEach(record => {
                 const card = document.createElement('div');
                 card.className = 'record-card';
-
                 let statusBadgeClass;
                 if (record.status === 'active') statusBadgeClass = 'badge-active';
                 else if (record.status === 'done') statusBadgeClass = 'badge-done';
@@ -620,11 +784,9 @@
                         </button>`
                     }
                 `;
-
                 recordListEl.appendChild(card);
             });
 
-            // 綁定切換按鈕事件（僅對非 disabled 按鈕）
             document.querySelectorAll('.toggle-btn:not([disabled])').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     const id = this.dataset.id;
@@ -650,21 +812,16 @@
         }
 
         function applyFiltersAndRender() {
-            // 每次顯示前先自動過期處理，確保跨日後立即反映
             expireOldRecords();
-
             const allRecords = loadData();
             let filtered = allRecords;
 
-            // 狀態篩選
             if (currentStatusFilter !== 'all') {
                 filtered = filtered.filter(r => r.status === currentStatusFilter);
             }
-            // 分類篩選
             if (currentCategoryFilter !== 'all') {
                 filtered = filtered.filter(r => r.category === currentCategoryFilter);
             }
-            // 搜尋過濾
             if (searchKeyword.trim() !== '') {
                 const keyword = searchKeyword.trim().toLowerCase();
                 filtered = filtered.filter(r => {
@@ -675,29 +832,18 @@
                 });
             }
 
-            // 按建立時間倒序（最新在前）
             filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
             renderList(filtered);
         }
 
-        // ---------- 新增預約流程 ----------
         function handleSubmit() {
             clearMessage();
-
             const date = dateInput.value;
             const time = timeSelect.value;
             const category = categorySelect.value;
 
-            if (!date) {
-                showMessage('請選擇預約日期', 'error');
-                return;
-            }
-            if (!time) {
-                showMessage('請選擇時段', 'error');
-                return;
-            }
-
+            if (!date) { showMessage('請選擇預約日期', 'error'); return; }
+            if (!time) { showMessage('請選擇時段', 'error'); return; }
             if (isSlotFull(date, time)) {
                 showMessage(`⚠️ ${date} ${time} 此時段已滿人 (超過 ${MAX_ACTIVE_PER_SLOT} 人預約)，請選擇其他時段`, 'error');
                 return;
@@ -705,37 +851,25 @@
 
             const newRecord = createRecord({ date, time, category });
             saveData(newRecord);
-
             categorySelect.value = '學校';
-
             showMessage(`✅ 預約成功！您的預約 ID 為：${newRecord.id}`, 'success');
             applyFiltersAndRender();
         }
 
-        // ---------- 篩選器互動 ----------
         function initFilterButtons() {
             filterButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const filterType = this.dataset.filter;
                     const filterValue = this.dataset.value;
-
-                    document.querySelectorAll(`.filter-btn[data-filter="${filterType}"]`).forEach(b => {
-                        b.classList.remove('active');
-                    });
+                    document.querySelectorAll(`.filter-btn[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-
-                    if (filterType === 'status') {
-                        currentStatusFilter = filterValue;
-                    } else if (filterType === 'category') {
-                        currentCategoryFilter = filterValue;
-                    }
-
+                    if (filterType === 'status') currentStatusFilter = filterValue;
+                    else if (filterType === 'category') currentCategoryFilter = filterValue;
                     applyFiltersAndRender();
                 });
             });
         }
 
-        // 搜尋輸入監聽
         function initSearch() {
             searchInput.addEventListener('input', function(e) {
                 searchKeyword = e.target.value;
@@ -743,7 +877,6 @@
             });
         }
 
-        // ---------- 初始化（async，優先從 Sheet 讀取）----------
         async function init() {
             setDateRange();
             generateTimeOptions();
@@ -751,7 +884,6 @@
             initSearch();
             submitBtn.addEventListener('click', handleSubmit);
 
-            // 嘗試從 Google Sheet 載入最新資料
             try {
                 const sheetRecords = await fetchRecordsFromSheet();
                 saveAllData(sheetRecords);
@@ -761,12 +893,10 @@
                 showMessage('⚠️ 無法連線至雲端，使用本地離線資料', 'error');
             }
 
-            // 渲染前自動過期處理（但 applyFiltersAndRender 內也會再次呼叫，雙重保險）
             expireOldRecords();
             applyFiltersAndRender();
         }
 
-        // 啟動
         init();
     })();
 </script>
