@@ -10,6 +10,7 @@
             --primary-light: #e0e7ff;
             --danger: #dc2626;
             --success: #059669;
+            --warning: #d97706;
             --bg: #f9fafb;
             --card-bg: #ffffff;
             --text: #111827;
@@ -96,6 +97,26 @@
         .filter-btn:hover:not(.active) {
             background: #f3f4f6;
             border-color: #c7d2fe;
+        }
+
+        /* 搜尋框 */
+        .search-box {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
         /* 預約表單 */
@@ -250,6 +271,11 @@
             color: #065f46;
         }
 
+        .badge-expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .toggle-btn {
             background: none;
             border: 1px solid var(--border);
@@ -262,9 +288,16 @@
             white-space: nowrap;
         }
 
-        .toggle-btn:hover {
+        .toggle-btn:hover:not(:disabled) {
             background: #f3f4f6;
             border-color: #a5b4fc;
+        }
+
+        .toggle-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+            color: #9ca3af;
         }
 
         .empty-message {
@@ -295,6 +328,7 @@
             <button class="filter-btn active" data-filter="status" data-value="all">全部</button>
             <button class="filter-btn" data-filter="status" data-value="active">Active</button>
             <button class="filter-btn" data-filter="status" data-value="done">Done</button>
+            <button class="filter-btn" data-filter="status" data-value="expired">Expired</button>
         </div>
         <div class="filter-group">
             <span class="filter-label">分類</span>
@@ -304,6 +338,11 @@
             <button class="filter-btn" data-filter="category" data-value="生活">生活</button>
             <button class="filter-btn" data-filter="category" data-value="其他">其他</button>
         </div>
+    </div>
+
+    <!-- 搜尋框 -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋預約編號、分類、日期或時段...">
     </div>
 
     <!-- 預約表單 -->
@@ -353,10 +392,12 @@
         const messageBox = document.getElementById('messageBox');
         const recordListEl = document.getElementById('recordList');
         const filterButtons = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('searchInput');
 
         // 當前篩選狀態
         let currentStatusFilter = 'all';
         let currentCategoryFilter = 'all';
+        let searchKeyword = '';
 
         // ---------- 工具函數 ----------
         function generateId() {
@@ -409,9 +450,6 @@
         }
 
         // ---------- 雲端同步相關 ----------
-        /**
-         * 將 Sheet 回傳的 PascalCase 物件轉為前端 camelCase
-         */
         function normalizeRecord(sheetRecord) {
             return {
                 id: sheetRecord.ID || sheetRecord.id || '',
@@ -423,10 +461,6 @@
             };
         }
 
-        /**
-         * 從 Google Apps Script 取得所有記錄
-         * 回傳已 normalize 的記錄陣列
-         */
         async function fetchRecordsFromSheet() {
             const response = await fetch(APPS_SCRIPT_URL);
             if (!response.ok) {
@@ -436,14 +470,9 @@
             if (!data.ok) {
                 throw new Error(data.error || 'Unknown server error');
             }
-            // 將所有記錄轉為前端格式
             return (data.records || []).map(normalizeRecord);
         }
 
-        /**
-         * 將操作同步至 Google Sheet (非同步，不回傳結果)
-         * payload: { action: "create", record } 或 { action: "update", id, changes }
-         */
         function syncToSheet(payload) {
             fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
@@ -466,7 +495,6 @@
             const records = loadData();
             records.push(record);
             saveAllData(records);
-            // 非同步同步到 Sheet
             syncToSheet({ action: "create", record: record });
         }
 
@@ -476,7 +504,6 @@
             if (index === -1) return null;
             records[index] = { ...records[index], ...changes };
             saveAllData(records);
-            // 非同步同步到 Sheet
             syncToSheet({ action: "update", id: id, changes: changes });
             return records[index];
         }
@@ -502,6 +529,25 @@
                 r.status === 'active'
             ).length;
             return activeCount >= MAX_ACTIVE_PER_SLOT;
+        }
+
+        // ---------- 自動將過期 active 改為 expired ----------
+        function expireOldRecords() {
+            const records = loadData();
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+            let changed = false;
+            records.forEach(record => {
+                if (record.status === 'active' && record.date < todayStr) {
+                    record.status = 'expired';
+                    changed = true;
+                    // 同步到 Sheet（不阻塞）
+                    syncToSheet({ action: "update", id: record.id, changes: { status: 'expired' } });
+                }
+            });
+            if (changed) {
+                saveAllData(records);
+            }
         }
 
         // ---------- 設定日期範圍 ----------
@@ -550,8 +596,13 @@
                 const card = document.createElement('div');
                 card.className = 'record-card';
 
-                const statusBadgeClass = record.status === 'active' ? 'badge-active' : 'badge-done';
-                const toggleLabel = record.status === 'active' ? '✔ 標記完成' : '↩ 恢復 Active';
+                let statusBadgeClass;
+                if (record.status === 'active') statusBadgeClass = 'badge-active';
+                else if (record.status === 'done') statusBadgeClass = 'badge-done';
+                else if (record.status === 'expired') statusBadgeClass = 'badge-expired';
+                else statusBadgeClass = '';
+
+                const isExpired = record.status === 'expired';
 
                 card.innerHTML = `
                     <div class="record-info">
@@ -562,16 +613,19 @@
                         <span class="record-field"><strong>🕒</strong> ${formatCreatedAt(record.createdAt)}</span>
                         <span class="badge ${statusBadgeClass}">${record.status}</span>
                     </div>
-                    <button class="toggle-btn" data-id="${escapeHtml(record.id)}" data-new-status="${record.status === 'active' ? 'done' : 'active'}">
-                        ${toggleLabel}
-                    </button>
+                    ${isExpired ? 
+                        '<button class="toggle-btn" disabled>⏳ 已過期</button>' :
+                        `<button class="toggle-btn" data-id="${escapeHtml(record.id)}" data-new-status="${record.status === 'active' ? 'done' : 'active'}">
+                            ${record.status === 'active' ? '✔ 標記完成' : '↩ 恢復 Active'}
+                        </button>`
+                    }
                 `;
 
                 recordListEl.appendChild(card);
             });
 
-            // 綁定切換按鈕事件
-            document.querySelectorAll('.toggle-btn').forEach(btn => {
+            // 綁定切換按鈕事件（僅對非 disabled 按鈕）
+            document.querySelectorAll('.toggle-btn:not([disabled])').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     const id = this.dataset.id;
                     const newStatus = this.dataset.newStatus;
@@ -596,17 +650,34 @@
         }
 
         function applyFiltersAndRender() {
+            // 每次顯示前先自動過期處理，確保跨日後立即反映
+            expireOldRecords();
+
             const allRecords = loadData();
             let filtered = allRecords;
 
+            // 狀態篩選
             if (currentStatusFilter !== 'all') {
                 filtered = filtered.filter(r => r.status === currentStatusFilter);
             }
+            // 分類篩選
             if (currentCategoryFilter !== 'all') {
                 filtered = filtered.filter(r => r.category === currentCategoryFilter);
             }
+            // 搜尋過濾
+            if (searchKeyword.trim() !== '') {
+                const keyword = searchKeyword.trim().toLowerCase();
+                filtered = filtered.filter(r => {
+                    return r.id.toLowerCase().includes(keyword) ||
+                        r.category.toLowerCase().includes(keyword) ||
+                        r.date.includes(keyword) ||
+                        r.time.includes(keyword);
+                });
+            }
 
+            // 按建立時間倒序（最新在前）
             filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
             renderList(filtered);
         }
 
@@ -664,24 +735,34 @@
             });
         }
 
-        // ---------- 初始化（改為 async，優先從 Sheet 讀取）----------
+        // 搜尋輸入監聽
+        function initSearch() {
+            searchInput.addEventListener('input', function(e) {
+                searchKeyword = e.target.value;
+                applyFiltersAndRender();
+            });
+        }
+
+        // ---------- 初始化（async，優先從 Sheet 讀取）----------
         async function init() {
             setDateRange();
             generateTimeOptions();
             initFilterButtons();
+            initSearch();
             submitBtn.addEventListener('click', handleSubmit);
 
             // 嘗試從 Google Sheet 載入最新資料
             try {
                 const sheetRecords = await fetchRecordsFromSheet();
-                // 成功：用 Sheet 資料覆蓋 localStorage
                 saveAllData(sheetRecords);
                 showMessage('✅ 已從雲端載入最新預約資料', 'success');
             } catch (error) {
                 console.warn('無法從 Google Sheet 載入，使用本地離線資料', error);
                 showMessage('⚠️ 無法連線至雲端，使用本地離線資料', 'error');
             }
-            // 不論成功或失敗，最終都用 loadData 渲染
+
+            // 渲染前自動過期處理（但 applyFiltersAndRender 內也會再次呼叫，雙重保險）
+            expireOldRecords();
             applyFiltersAndRender();
         }
 
